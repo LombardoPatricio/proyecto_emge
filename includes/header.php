@@ -8,30 +8,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhoneShop</title>
-    <link rel="stylesheet" href="/phoneshop/assets/css/style.css">
-    <script src="/phoneshop/assets/js/validation.js"></script>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script src="/assets/js/validation.js"></script>
 </head>
 <body>
 
 <nav class="navbar">
-    <a href="/phoneshop/index.php" class="logo">📱 PhoneShop</a>
+    <a href="index.php" class="logo">📱 PhoneShop</a>
 
     <div class="nav-links">
-        <a href="/phoneshop/index.php">Inicio</a>
+        <a href="index.php">Inicio</a>
 
         <?php if (isLoggedIn()): ?>
             <?php if (isAdmin()): ?>
-                <a href="/phoneshop/admin/products.php">Productos</a>
-                <a href="/phoneshop/admin/users.php">Usuarios</a>
+                <a href="admin/products.php">Productos</a>
+                <a href="admin/users.php">Usuarios</a>
             <?php endif; ?>
-            <a href="/phoneshop/cart.php" class="cart-btn">
+            <a href="cart.php" class="cart-btn">
                 🛒 Carrito
                 <span class="cart-count"><?= count($_SESSION['cart'] ?? []) ?></span>
             </a>
             <span class="nav-user">👤 <?= htmlspecialchars($_SESSION['name']) ?></span>
-            <a href="/phoneshop/logout.php" class="btn-outline">Salir</a>
+            <a href="logout.php" class="btn-outline">Salir</a>
         <?php else: ?>
-            <a href="/phoneshop/login.php" class="btn-outline">Iniciar Sesión</a>
+            <a href="login.php" class="btn-outline">Iniciar Sesión</a>
         <?php endif; ?>
     </div>
 </nav>
