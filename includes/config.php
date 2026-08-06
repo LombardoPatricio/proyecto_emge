@@ -11,10 +11,10 @@ $USE_MYSQL = true;  // ← true = MySQL (XAMPP) | false = SQLite (sin configurac
 
 if ($USE_MYSQL) {
     // ── MySQL ──────────────────────────────────────────────
-    define('DB_HOST', 'localhost');
+    define('DB_HOST', 'db');
     define('DB_NAME', 'phoneshop');
     define('DB_USER', 'root');
-    define('DB_PASS', '');          // En XAMPP la contraseña es vacía por defecto
+    define('DB_PASS', 'root');      
 
     $db = new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
