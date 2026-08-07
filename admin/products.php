@@ -10,6 +10,7 @@ if (!isAdmin()) {
 
 // ── CREAR / EDITAR ──────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrf($_POST['csrf_token'] ?? '');
     $id    = (int)($_POST['id'] ?? 0);
     $name  = trim($_POST['name'] ?? '');
     $desc  = trim($_POST['description'] ?? '');
@@ -35,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── ELIMINAR ────────────────────────────────────────────────────────────
 if (isset($_GET['delete'])) {
+    requireCsrf($_GET['csrf_token'] ?? '');
     $id = (int)$_GET['delete'];
     $db->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
     redirect('products.php', 'Producto eliminado.');
@@ -101,6 +103,7 @@ include '../includes/header.php';
     <form method="POST" id="productForm" novalidate style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:end;">
         <!-- ID oculto para edición -->
         <input type="hidden" name="id" value="<?= $editProduct['id'] ?? 0 ?>">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
 
         <div class="form-group">
             <label>Nombre</label>
@@ -195,7 +198,7 @@ include '../includes/header.php';
                             <a href="products.php?edit=<?= $p['id'] ?>" class="btn btn-outline btn-sm">✏️ Editar</a>
 
                             <!-- Botón eliminar -->
-                            <a href="products.php?delete=<?= $p['id'] ?>"
+                            <a href="products.php?delete=<?= $p['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                class="btn btn-danger btn-sm"
                                onclick="return confirm('¿Eliminar «<?= htmlspecialchars($p['name'], ENT_QUOTES) ?>»?')">
                                🗑 Borrar
