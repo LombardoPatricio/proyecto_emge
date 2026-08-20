@@ -8,6 +8,7 @@ if (!isAdmin()) {
 
 // ─── CREAR / EDITAR (mismo patrón que admin/products.php) ────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrf($_POST['csrf_token'] ?? '');
     $id    = (int)($_POST['id'] ?? 0);
     $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -69,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ─── CAMBIAR ROL ──────────────────────────────────────────────────────────
 if (isset($_GET['role'])) {
+    requireCsrf($_GET['csrf_token'] ?? '');
     $id      = (int)$_GET['id'];
     $newRole = $_GET['role'] === 'admin' ? 'admin' : 'user';
 
@@ -83,6 +85,7 @@ if (isset($_GET['role'])) {
 
 // ─── ACTIVAR / DESACTIVAR ──────────────────────────────────────────────────
 if (isset($_GET['toggle'])) {
+    requireCsrf($_GET['csrf_token'] ?? '');
     $id = (int)$_GET['toggle'];
 
     if ($id === (int)$_SESSION['user_id']) {
@@ -97,6 +100,7 @@ if (isset($_GET['toggle'])) {
 
 // ─── ELIMINAR USUARIO ─────────────────────────────────────────────────────
 if (isset($_GET['delete'])) {
+    requireCsrf($_GET['csrf_token'] ?? '');
     $id = (int)$_GET['delete'];
 
     if ($id === (int)$_SESSION['user_id']) {
@@ -175,6 +179,7 @@ include '../includes/header.php';
           data-is-edit="<?= $editUser ? '1' : '0' ?>"
           style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:end;">
         <input type="hidden" name="id" value="<?= $editUser['id'] ?? 0 ?>">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
 
         <div class="form-group">
             <label>Nombre</label>
@@ -277,13 +282,13 @@ include '../includes/header.php';
                             <a href="users.php?edit=<?= $u['id'] ?>" class="btn btn-outline btn-sm">✏️ Editar</a>
 
                             <?php if ($u['role'] === 'user'): ?>
-                                <a href="users.php?role=admin&id=<?= $u['id'] ?>"
+                                <a href="users.php?role=admin&id=<?= $u['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                    class="btn btn-outline btn-sm"
                                    onclick="return confirm('¿Hacer admin a <?= htmlspecialchars($u['name'], ENT_QUOTES) ?>?')">
                                    ⬆️ Hacer Admin
                                 </a>
                             <?php else: ?>
-                                <a href="users.php?role=user&id=<?= $u['id'] ?>"
+                                <a href="users.php?role=user&id=<?= $u['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                    class="btn btn-outline btn-sm"
                                    onclick="return confirm('¿Quitar rol de admin a <?= htmlspecialchars($u['name'], ENT_QUOTES) ?>?')">
                                    ⬇️ Quitar Admin
@@ -292,13 +297,13 @@ include '../includes/header.php';
 
                             <!-- Activar / Desactivar -->
                             <?php if ((int)$u['active'] === 1): ?>
-                                <a href="users.php?toggle=<?= $u['id'] ?>"
+                                <a href="users.php?toggle=<?= $u['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('¿Desactivar a <?= htmlspecialchars($u['name'], ENT_QUOTES) ?>?')">
                                    🚫 Desactivar
                                 </a>
                             <?php else: ?>
-                                <a href="users.php?toggle=<?= $u['id'] ?>"
+                                <a href="users.php?toggle=<?= $u['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                    class="btn btn-primary btn-sm"
                                    onclick="return confirm('¿Reactivar a <?= htmlspecialchars($u['name'], ENT_QUOTES) ?>?')">
                                    ✅ Activar

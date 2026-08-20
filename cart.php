@@ -13,6 +13,14 @@ if (!isset($_SESSION['cart'])) {
 }
 
 // ─── PROCESAR ACCIONES DEL CARRITO ───────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrf($_POST['csrf_token'] ?? '');
+}
+
+if (isset($_GET['action']) && in_array($_GET['action'], ['remove', 'clear'], true)) {
+    requireCsrf($_GET['csrf_token'] ?? '');
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($action === 'add') {
@@ -67,9 +75,12 @@ $total = 0;
 
 if (!empty($_SESSION['cart'])) {
     // Obtener IDs del carrito
-    $ids = implode(',', array_map('intval', array_keys($_SESSION['cart'])));
+    $ids = array_map('intval', array_keys($_SESSION['cart']));
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-    $products = $db->query("SELECT * FROM products WHERE id IN ($ids)")->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
+    $stmt->execute($ids);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($products as $p) {
         $qty = $_SESSION['cart'][$p['id']];
@@ -119,7 +130,7 @@ include 'includes/header.php';
                         <td><?= $item['qty'] ?></td>
                         <td><strong style="color:var(--orange)">$<?= number_format($item['subtotal'], 2) ?></strong></td>
                         <td>
-                            <a href="cart.php?action=remove&id=<?= $item['id'] ?>"
+                            <a href="cart.php?action=remove&id=<?= $item['id'] ?>&csrf_token=<?= urlencode(csrfToken()) ?>"
                                class="btn btn-danger btn-sm"
                                onclick="return confirm('¿Eliminar este producto?')">
                                ✕ Quitar
@@ -138,12 +149,13 @@ include 'includes/header.php';
 
         <form method="POST">
             <input type="hidden" name="action" value="checkout">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
             <button type="submit" class="btn btn-primary" style="width:100%; margin-bottom:.5rem">
                 ✅ Confirmar compra
             </button>
         </form>
 
-        <a href="cart.php?action=clear"
+        <a href="cart.php?action=clear&csrf_token=<?= urlencode(csrfToken()) ?>"
            class="btn btn-outline"
            style="width:100%; text-align:center"
            onclick="return confirm('¿Vaciar el carrito?')">

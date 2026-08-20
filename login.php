@@ -10,6 +10,7 @@ $error = '';
 
 // ─── PROCESAR FORMULARIO ──────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrf($_POST['csrf_token'] ?? '');
 
     $action = $_POST['action'] ?? '';
     $email  = trim($_POST['email'] ?? '');
@@ -17,32 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ── INICIAR SESIÓN ──────────────────────────────────────────────────
     if ($action === 'login') {
-        // Buscar usuario por email
-        $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Verificar contraseña
-        if ($user && password_verify($pass, $user['password'])) {
-
-            // Verificar que la cuenta esté activa
-            if ((int)$user['active'] === 0) {
-                $error = 'Tu cuenta está desactivada. Contactá al administrador.';
-            } else {
-                // Guardar datos en sesión
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['name']    = $user['name'];
-                $_SESSION['role']    = $user['role'];
-
-                // Redirigir según rol
-                if ($user['role'] === 'admin') {
-                    redirect('admin/products.php', '¡Bienvenido, Admin!');
-                } else {
-                    redirect('index.php', '¡Bienvenido, ' . $user['name'] . '!');
-                }
-            }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Ingresá un email válido.';
         } else {
-            $error = 'Email o contraseña incorrectos.';
+            $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($pass, $user['password'])) {
+                if ((int)$user['active'] === 0) {
+                    $error = 'Tu cuenta está desactivada. Contactá al administrador.';
+                } else {
+                    regenerateSession();
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['name']    = $user['name'];
+                    $_SESSION['role']    = $user['role'];
+
+                    if ($user['role'] === 'admin') {
+                        redirect('admin/products.php', '¡Bienvenido, Admin!');
+                    } else {
+                        redirect('index.php', '¡Bienvenido, ' . $user['name'] . '!');
+                    }
+                }
+            } else {
+                $error = 'Email o contraseña incorrectos.';
+            }
         }
     }
 
@@ -52,15 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$name || !$email || !$pass) {
             $error = 'Todos los campos son obligatorios.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Ingresá un email válido.';
         } else {
-            // Verificar que el email no exista
             $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
 
             if ($stmt->fetch()) {
                 $error = 'Ese email ya está registrado.';
             } else {
-                // Crear usuario con rol 'user'
                 $hash = password_hash($pass, PASSWORD_DEFAULT);
                 $stmt = $db->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')");
                 $stmt->execute([$name, $email, $hash]);
@@ -115,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="tab-login" class="tab-panel active">
         <form method="POST" id="loginForm" novalidate>
             <input type="hidden" name="action" value="login">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
 
             <div class="form-group">
                 <label>Email</label>
@@ -128,16 +129,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
         </form>
 
-        <div class="form-footer" style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border); font-size:.8rem;">
-            <strong style="color:var(--muted)">Admin de prueba:</strong><br>
-            admin@phoneshop.com / admin123
-        </div>
     </div>
 
     <!-- ── FORMULARIO DE REGISTRO ───────────────────────── -->
     <div id="tab-register" class="tab-panel">
         <form method="POST" id="registerForm" novalidate>
             <input type="hidden" name="action" value="register">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
 
             <div class="form-group">
                 <label>Nombre</label>

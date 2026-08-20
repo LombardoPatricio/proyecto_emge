@@ -110,6 +110,7 @@ include 'includes/header.php';
                         <form method="POST" action="cart.php">
                             <input type="hidden" name="action"     value="add">
                             <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="btn btn-primary btn-sm">🛒 Agregar</button>
                         </form>
                     <?php else: ?>
